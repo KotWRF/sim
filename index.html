@@ -1,25 +1,41 @@
 <!DOCTYPE html>
 <html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sim</title>
-    <link rel="stylesheet" href="css/map.css" />
-    <link rel="stylesheet" href="css/hud.css" />
-  </head>
-  <body>
-    <canvas id="gameCanvas"></canvas>
 
-    <div id="inspector" class="inspector-left">
-      <h3>Инспектор</h3>
-      <div id="inspector-content">Кликните на пешку...</div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sim</title>
+  <link rel="stylesheet" href="css/map.css" />
+  <link rel="stylesheet" href="css/hud.css" />
+</head>
+
+<body>
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="top-panel-container">
+    <div id="top-panel-content">
+      <!-- Content will be populated by JS -->
     </div>
+    <div id="top-panel-toggle" title="Статистика">&#9660;</div>
+  </div>
 
-    <script src="js/config.js"></script>
-    <script src="js/time.js"></script>
-    <script src="js/map.js"></script>
-    <script src="js/pawn.js"></script>
-    <script src="js/hud.js"></script>
-    <script src="js/main.js"></script>
-  </body>
+  <div id="inspector" class="inspector-left">
+    <div id="inspector-card">
+      <div id="inspector-front" class="card-face">
+        <div id="inspector-content">Кликните на пешку...</div>
+      </div>
+      <div id="inspector-back" class="card-face">
+        <!-- Подробная инфо -->
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/time.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/pawn.js"></script>
+  <script src="js/hud.js"></script>
+  <script src="js/main.js"></script>
+</body>
+
 </html>
