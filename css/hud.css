@@ -1,18 +1,665 @@
-#inspector {
-    position: absolute;
-    top: 20px;
-    width: 220px;
-    min-height: 120px;
-    padding: 15px;
-    background: linear-gradient(135deg, #f0f0f0, #dcdcdc); /* Светло-серый градиент */
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 12px; /* Скругление */
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2); /* Тень */
-    font-family: Arial, sans-serif;
-    transition: transform 0.2s ease; /* Плавность, если захочешь, но можно убрать */
-    pointer-events: none; /* Чтобы не мешал кликать пешек под ним */
-    z-index: 100;
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
+:root {
+    --glass-bg: rgba(12, 12, 18, 0.85);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.12);
+    --glass-blur: blur(15px);
+    --glass-shadow: 0 15px 45px rgba(0, 0, 0, 0.7);
+    --text-main: #ffffff;
+    --text-dim: #cccccc;
+    --accent-color: #60aaff;
+    --font-primary: 'Outfit', 'Segoe UI', system-ui, sans-serif;
+    --global-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-.inspector-left { left: 20px; }
-.inspector-right { right: 20px; }
+body,
+#inspector,
+#top-panel-container,
+#bottom-panel-container {
+    font-family: var(--font-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+#inspector {
+    position: fixed;
+    top: 20px;
+    width: 280px;
+    min-height: 240px;
+    height: auto;
+    /* Высота лицевой стороны */
+    z-index: 1000;
+    perspective: 1200px;
+    pointer-events: auto;
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    user-select: none;
+    /* Чтобы двойной клик не выделял текст */
+}
+
+#inspector.flipped {
+    min-height: 300px;
+    /* Чуть больше для задней стороны */
+}
+
+#inspector-card {
+    width: 100%;
+    height: 100%;
+    min-height: inherit;
+    position: relative;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+    pointer-events: auto;
+}
+
+#inspector.flipped #inspector-card {
+    transform: rotateY(180deg);
+}
+
+.card-face {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    min-height: inherit;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+    border-radius: 20px;
+    padding: 24px;
+    /* Увеличили отступы со всех сторон */
+    box-shadow: var(--glass-shadow);
+    color: var(--text-main);
+    box-sizing: border-box;
+    pointer-events: auto;
+    /* Чтобы ничего не торчало */
+}
+
+#inspector-back {
+    transform: rotateY(180deg);
+    display: flex;
+    flex-direction: column;
+}
+
+#inspector-front {
+    z-index: 2;
+}
+
+#inspector h3 {
+    margin: 0 0 12px 0;
+    font-size: 0.8em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.inspector-left {
+    left: 20px;
+}
+
+.inspector-right {
+    right: 20px;
+}
+
+/* Inspector Content Styles */
+#inspector-pawn-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+#hud-color-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    background-color: #ccc;
+}
+
+#inspector-pawn-info {
+    display: flex;
+    flex-direction: column;
+}
+
+#hud-name {
+    font-size: 1.3em;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+}
+
+#hud-cell-label {
+    font-size: 0.7em;
+    font-family: 'Fira Code', monospace;
+    color: var(--accent-color);
+    margin-top: 2px;
+}
+
+#inspector-close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    font-family: Arial, sans-serif;
+    line-height: 1;
+    color: #666;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+#inspector-close:hover {
+    background: rgba(255, 0, 0, 0.1);
+    color: #d00;
+}
+
+.pawn-link {
+    color: var(--accent-color);
+    text-decoration: none;
+    cursor: pointer;
+    border-bottom: 1px dashed rgba(77, 163, 255, 0.3);
+    transition: all 0.2s;
+}
+
+.pawn-link:hover {
+    color: #fff;
+    border-bottom-style: solid;
+    border-bottom-color: #fff;
+}
+
+.clickable-list {
+    display: inline-block;
+}
+
+.stat-value-dead {
+    color: rgba(255, 255, 255, 0.35);
+    font-style: italic;
+    cursor: default;
+    border: none;
+}
+
+.inspector-details {
+    font-size: 0.9em;
+    color: var(--text-main);
+    line-height: 1.6;
+    padding-bottom: 10px;
+    /* Дополнительный отступ снизу */
+}
+
+.inspector-details p {
+    margin: 6px 0;
+    display: flex;
+    justify-content: space-between;
+}
+
+.stat-value {
+    font-weight: 600;
+    color: #fff;
+}
+
+/* === BOTTOM PANEL === */
+#bottom-panel-container {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 500px;
+    max-width: 95%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+#bottom-panel-toggle {
+    position: absolute;
+    bottom: 0;
+    width: 44px;
+    height: 18px;
+    background: var(--glass-bg);
+    border: var(--glass-border);
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    color: var(--text-dim);
+    font-size: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(8px);
+    z-index: 1002;
+}
+
+#bottom-panel-toggle:hover {
+    background: rgba(40, 40, 50, 1);
+    color: #fff;
+    height: 22px;
+}
+
+#bottom-panel-content {
+    width: 100%;
+    height: 110px;
+    background: var(--glass-bg);
+    border: var(--glass-border);
+    border-bottom: none;
+    border-radius: 20px 20px 0 0;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    pointer-events: auto;
+    transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transform: translateY(100%);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 35px;
+    box-sizing: border-box;
+    box-shadow: var(--glass-shadow);
+    z-index: 1001;
+}
+
+#bottom-panel-content.expanded {
+    transform: translateY(0);
+}
+
+#bottom-panel-content.expanded~#bottom-panel-toggle {
+    bottom: 110px;
+}
+
+/* Группировка элементов */
+.hud-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Кнопки скорости */
+.hud-controls-speed {
+    display: flex;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px;
+    border-radius: 10px;
+}
+
+.hud-btn-icon {
+    width: 38px;
+    height: 38px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 13px;
+    transition: all 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hud-btn-icon:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.hud-btn-icon.active {
+    background: rgba(255, 255, 255, 0.9);
+    color: #000;
+}
+
+/* Блок дня */
+.day-info-group {
+    gap: 20px;
+}
+
+.day-number-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 80px;
+    gap: 2px;
+}
+
+.stat-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-shadow: var(--global-shadow);
+}
+
+.hud-stat-value {
+    font-size: 36px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    letter-spacing: -1px;
+}
+
+/* Палочки (Tally Marks) */
+.tally-container {
+    position: relative;
+    height: 15px;
+    margin-top: 5px;
+    display: flex;
+    gap: 3px;
+}
+
+.tally-stick {
+    width: 2px;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 1px;
+}
+
+.tally-cross {
+    position: absolute;
+    width: 20px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.8);
+    transform: rotate(-15deg);
+    top: 5px;
+    left: -2px;
+}
+
+/* Виджет цикла суток (Горизонт) */
+.day-cycle-widget {
+    width: 140px;
+    height: 70px;
+    position: relative;
+    overflow: hidden;
+    background: var(--sky-color, rgba(10, 10, 25, 0.95));
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-bottom: none;
+    border-radius: 140px 140px 0 0;
+    box-shadow: inset 0 2px 20px rgba(0, 0, 0, 0.6), 0 -2px 10px rgba(255, 255, 255, 0.05);
+    /* Убрали transition, чтобы избежать моргания при обновлении из JS */
+}
+
+.cycle-disc {
+    position: absolute;
+    width: 200px;
+    /* Уменьшили до 200 по просьбе юзера */
+    height: 200px;
+    top: -10px;
+    /* Центр (100) минус высота виджета (70) = -30, чтобы центр был внизу */
+    left: calc(50% - 100px);
+    transition: transform 0.5s linear;
+}
+
+.cycle-icon-wrapper {
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 28px;
+    transition: transform 0.5s linear;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.cycle-sun-wrapper,
+.cycle-moon-wrapper {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.cycle-sun-wrapper {
+    filter: drop-shadow(0 0 12px #ffae00) drop-shadow(0 0 18px rgba(255, 174, 0, 0.3));
+}
+
+.cycle-moon-wrapper {
+    filter: drop-shadow(0 0 10px #ffffff);
+}
+
+.cycle-sky-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.4), transparent);
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* Вертикальные переключатели */
+.hud-toggles-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.hud-btn-mini {
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.4);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.hud-btn-mini:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #fff;
+}
+
+.hud-btn-mini.active {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: #fff;
+}
+
+/* === ВЕРХНЯЯ ПАНЕЛЬ СТАТИСТИКИ === */
+#top-panel-container {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(calc(-100% + 18px));
+    width: 340px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+    transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+#top-panel-container.expanded {
+    transform: translateX(-50%) translateY(0);
+}
+
+#top-panel-content {
+    width: 100%;
+    height: auto;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+    border-top: none;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    padding: 22px 22px 20px 22px;
+    box-shadow: var(--glass-shadow);
+    box-sizing: border-box;
+    pointer-events: auto;
+}
+
+/* Тянем весь контейнер вверх, оставляя хвостик кнопки (18px) */
+#top-panel-toggle {
+    width: 44px;
+    height: 18px;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+    border-top: none;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 10px;
+    color: var(--text-dim);
+    transition: all 0.3s;
+    pointer-events: auto;
+    z-index: 1002;
+    margin-top: -1px;
+}
+
+#top-panel-toggle:hover {
+    background: var(--accent-color);
+    color: #000;
+    height: 22px;
+}
+
+.top-stat-section {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.legacy-records {
+    border-bottom: none;
+    background: rgba(255, 255, 255, 0.02);
+    padding: 10px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+.top-stat-row,
+.stat-row {
+    font-size: 1.05em;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: var(--text-main);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.top-stat-row.mini {
+    font-size: 0.85em;
+    margin-bottom: 4px;
+    color: var(--text-dim);
+}
+
+.top-stat-row.mini b {
+    color: #fff;
+}
+
+.top-stat-row:last-child {
+    margin-bottom: 0;
+}
+
+.demographic-tree {
+    margin: 12px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.stage-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.stage-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+}
+
+.stage-info span:last-child {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.stat-progress-bg {
+    width: 100%;
+    height: 6px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.stat-progress-fill {
+    height: 100%;
+    width: 0%;
+    transition: width 0.5s ease-out;
+}
+
+/* Цвета по стадиям */
+.fill-young {
+    background: #4CAF50;
+}
+
+.fill-adult {
+    background: #2196F3;
+}
+
+.fill-elder {
+    background: #FF9800;
+}
+
+.fill-dead {
+    background: #555555;
+}
+
+.btn-spawn-wrapper {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+}
+
+.hud-btn-wide {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border-radius: 8px;
+    padding: 6px 20px;
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: all 0.3s;
+    outline: none;
+}
+
+.hud-btn-wide:hover {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: #000;
+    box-shadow: 0 0 15px rgba(88, 166, 255, 0.4);
+    transform: translateY(-1px);
+}
