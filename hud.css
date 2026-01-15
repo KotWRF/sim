@@ -1,0 +1,18 @@
+#inspector {
+    position: absolute;
+    top: 20px;
+    width: 220px;
+    min-height: 120px;
+    padding: 15px;
+    background: linear-gradient(135deg, #f0f0f0, #dcdcdc); /* Светло-серый градиент */
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 12px; /* Скругление */
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2); /* Тень */
+    font-family: Arial, sans-serif;
+    transition: transform 0.2s ease; /* Плавность, если захочешь, но можно убрать */
+    pointer-events: none; /* Чтобы не мешал кликать пешек под ним */
+    z-index: 100;
+}
+
+.inspector-left { left: 20px; }
+.inspector-right { right: 20px; }

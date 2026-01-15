@@ -1,0 +1,12 @@
+
+
+body {
+    margin: 0;
+    background-color: #1a1a1a; /* Глубокий серый/черный */
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+}
+
